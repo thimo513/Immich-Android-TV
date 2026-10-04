@@ -159,3 +159,6 @@ dependencies {
     testImplementation libs.google.api.client
 
 }
+
+// Immich TV Plus fork: search, favorites, places and self-update
+apply from: 'plus.gradle'

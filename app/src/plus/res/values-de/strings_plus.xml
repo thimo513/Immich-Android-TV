@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plus_search">Suche</string>
+    <string name="plus_favorites">Favoriten</string>
+    <string name="plus_places">Orte</string>
+
+    <string name="plus_search_title_empty">KI-Suche: Lupe auswählen oder nach rechts drücken</string>
+    <string name="plus_search_title_with_query">Suche: %1$s</string>
+    <string name="plus_search_dialog_title">Fotos suchen</string>
+    <string name="plus_search_hint">z. B. Berge, Segelboot, Strand</string>
+    <string name="plus_search_action">Suchen</string>
+    <string name="plus_search_voice">Spracheingabe</string>
+    <string name="plus_search_voice_prompt">Wonach suchst du?</string>
+
+    <string name="plus_update_title">Update verfügbar</string>
+    <string name="plus_update_message">Immich TV Plus %1$s ist verfügbar.</string>
+    <string name="plus_update_install">Jetzt installieren</string>
+    <string name="plus_update_later">Später</string>
+    <string name="plus_update_downloading">Update wird heruntergeladen…</string>
+    <string name="plus_update_failed">Update fehlgeschlagen: %1$s</string>
+</resources>

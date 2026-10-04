@@ -133,6 +133,7 @@ class HomeFragment : BrowseSupportFragment() {
     companion object {
         private val HEADERS: List<Header> = listOf(
             Header(ImmichApplication.appContext!!.getString(R.string.timeline)) { TimelineFragment() },
+            *nl.giejay.android.tv.immich.plus.PlusMenu.headers(), // Immich TV Plus: search, favorites, places
             Header(ImmichApplication.appContext!!.getString(R.string.albums)) {
                 AlbumFragment().apply {
                     arguments = bundleOf("selectionMode" to false)

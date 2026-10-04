@@ -101,6 +101,12 @@
         android:label="PeopleFragment">
     </fragment>
 
+    <!-- Immich TV Plus: assets of one place, opened from plus.places.PlacesFragment -->
+    <fragment
+        android:id="@+id/plusPlaceAssetsFragment"
+        android:name="nl.giejay.android.tv.immich.plus.places.PlaceAssetsFragment"
+        android:label="PlaceAssetsFragment" />
+
     <fragment
         android:id="@+id/metaDataCustomizer"
         android:name="nl.giejay.android.tv.immich.settings.MetaDataCustomizerFragment"

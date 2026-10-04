@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="plus_app_name" translatable="false">Immich TV Plus</string>
+
+    <string name="plus_search">Search</string>
+    <string name="plus_favorites">Favorites</string>
+    <string name="plus_places">Places</string>
+
+    <string name="plus_search_title_empty">Smart search: select the magnifier or press right</string>
+    <string name="plus_search_title_with_query">Search: %1$s</string>
+    <string name="plus_search_dialog_title">Search photos</string>
+    <string name="plus_search_hint">e.g. mountains, sailboat, beach</string>
+    <string name="plus_search_action">Search</string>
+    <string name="plus_search_voice">Voice input</string>
+    <string name="plus_search_voice_prompt">What are you looking for?</string>
+
+    <string name="plus_update_title">Update available</string>
+    <string name="plus_update_message">Immich TV Plus %1$s is available.</string>
+    <string name="plus_update_install">Install now</string>
+    <string name="plus_update_later">Later</string>
+    <string name="plus_update_downloading">Downloading update…</string>
+    <string name="plus_update_failed">Update failed: %1$s</string>
+</resources>

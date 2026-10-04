@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Immich TV Plus additions, merged over app/src/main/AndroidManifest.xml (see app/plus.gradle) -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- In-app updater: install the downloaded release APK -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Android 12+: later updates without a confirmation click -->
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
+
+    <!-- Voice input for the smart search -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
+        </intent>
+    </queries>
+
+    <application
+        android:label="@string/plus_app_name"
+        tools:replace="android:label">
+
+        <!-- The fork builds with a placeholder google-services.json: send nothing to Firebase -->
+        <meta-data
+            android:name="firebase_analytics_collection_deactivated"
+            android:value="true" />
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
+
+        <provider
+            android:name="nl.giejay.android.tv.immich.plus.PlusInitializer"
+            android:authorities="${applicationId}.plusinitializer"
+            android:exported="false" />
+
+        <receiver
+            android:name="nl.giejay.android.tv.immich.plus.update.InstallResultReceiver"
+            android:exported="false" />
+    </application>
+</manifest>
