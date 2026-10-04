@@ -25,6 +25,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  # gh would otherwise pick the "upstream" remote and act on giejay's repository
+  GH_REPO: ${{ github.repository }}
   UPSTREAM: https://github.com/giejay/Immich-Android-TV.git
   APK_NAME: ImmichTVPlus.apk
   CONFLICT_TITLE: Sync-Konflikt mit dem Original
