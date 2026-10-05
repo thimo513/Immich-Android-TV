@@ -15,9 +15,7 @@
         </intent>
     </queries>
 
-    <application
-        android:label="@string/plus_app_name"
-        tools:replace="android:label">
+    <application>
 
         <!-- The fork builds with a placeholder google-services.json: send nothing to Firebase -->
         <meta-data

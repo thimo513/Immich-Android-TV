@@ -3,27 +3,35 @@ package nl.giejay.android.tv.immich.plus.search
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.os.SystemClock
 import android.speech.RecognizerIntent
+import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.FrameLayout
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import arrow.core.Either
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.launch
 import nl.giejay.android.tv.immich.R
 import nl.giejay.android.tv.immich.api.ApiClient
 import nl.giejay.android.tv.immich.api.model.Asset
 import nl.giejay.android.tv.immich.assets.GenericAssetFragment
 import nl.giejay.android.tv.immich.plus.api.PlusApi
+import nl.giejay.android.tv.immich.shared.viewmodel.KeyEventsViewModel
 
 /**
  * Smart search (CLIP) over the whole library, e.g. "mountains" or "sailboat".
  *
- * The query is entered through the search orb in the title, or by pressing right when the grid
- * is empty / at its right edge (the spot where other pages open their settings).
+ * The query is entered in a dialog: OK while the page is empty, or right at the grid's right edge
+ * (the spot where other pages open their settings).
  */
 class SmartSearchFragment : GenericAssetFragment() {
     private var dialogOpen = false
@@ -34,8 +42,30 @@ class SmartSearchFragment : GenericAssetFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setOnSearchClickedListener { showSearchDialog() }
         updateTitle()
+        openDialogOnOkWhileEmpty()
+    }
+
+    /**
+     * On an empty search page there is nothing to focus, so OK on the remote (also the press that
+     * enters the page from the menu) opens the search dialog. The key state is replayed to new
+     * collectors, hence the age check: only a fresh press counts.
+     */
+    private fun openDialogOnOkWhileEmpty() {
+        val keyEvents = ViewModelProvider(requireActivity())[KeyEventsViewModel::class.java]
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                keyEvents.state.collect { event ->
+                    val isOk = event?.keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                        event?.keyCode == KeyEvent.KEYCODE_ENTER ||
+                        event?.keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+                    val fresh = event != null && SystemClock.uptimeMillis() - event.eventTime < FRESH_KEY_MS
+                    if (isOk && fresh && lastQuery == null && assets.isEmpty()) {
+                        showSearchDialog()
+                    }
+                }
+            }
+        }
     }
 
     override suspend fun loadItems(
@@ -123,5 +153,6 @@ class SmartSearchFragment : GenericAssetFragment() {
     companion object {
         // survives switching pages and returning from the photo slider
         private var lastQuery: String? = null
+        private const val FRESH_KEY_MS = 500L
     }
 }

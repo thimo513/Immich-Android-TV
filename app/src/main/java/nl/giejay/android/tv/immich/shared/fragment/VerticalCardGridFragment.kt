@@ -238,7 +238,7 @@ abstract class VerticalCardGridFragment<ITEM> : GridFragment() {
     }
 
     private fun setupAdapter() {
-        val presenter = VerticalGridPresenter(ZOOM_FACTOR)
+        val presenter = VerticalGridPresenter(ZOOM_FACTOR, false) // Immich TV Plus: no dimming of unfocused thumbnails
         presenter.numberOfColumns = COLUMNS
         gridPresenter = presenter
         val cardPresenter = CardPresenterSelector(requireContext())

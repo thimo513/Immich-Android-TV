@@ -23,6 +23,7 @@ Eingriffe in Originaldateien (bewusst minimal, damit Merges konfliktfrei bleiben
 1. `app/build.gradle`: `apply from: 'plus.gradle'`
 2. `HomeFragment.kt`: eine Zeile `*PlusMenu.headers()` in `HEADERS`
 3. `nav_graph.xml`: Destination `plusPlaceAssetsFragment`
+4. `VerticalCardGridFragment.kt`: `VerticalGridPresenter(ZOOM_FACTOR, false)`, schaltet das Abdunkeln nicht fokussierter Vorschaubilder aus (Leanback dimmt sie standardmäßig)
 
 ## Branches und Automatik
 

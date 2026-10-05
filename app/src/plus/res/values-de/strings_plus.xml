@@ -4,7 +4,7 @@
     <string name="plus_favorites">Favoriten</string>
     <string name="plus_places">Orte</string>
 
-    <string name="plus_search_title_empty">KI-Suche: Lupe auswählen oder nach rechts drücken</string>
+    <string name="plus_search_title_empty">KI-Suche: OK drücken, um zu suchen</string>
     <string name="plus_search_title_with_query">Suche: %1$s</string>
     <string name="plus_search_dialog_title">Fotos suchen</string>
     <string name="plus_search_hint">z. B. Berge, Segelboot, Strand</string>

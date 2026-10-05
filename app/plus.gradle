@@ -28,6 +28,9 @@ android {
         // build type manifests are merged over src/main/AndroidManifest.xml
         debug.manifest.srcFile 'src/plus/AndroidManifest.xml'
         release.manifest.srcFile 'src/plus/AndroidManifest.xml'
+        // build type resources win over src/main: used to rename the app
+        debug.res.srcDir 'src/plus/res-override'
+        release.res.srcDir 'src/plus/res-override'
     }
 
     buildTypes {
