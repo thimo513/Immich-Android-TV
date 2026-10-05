@@ -4,8 +4,8 @@
     <string name="plus_favorites">Favorites</string>
     <string name="plus_places">Places</string>
 
-    <string name="plus_search_title_empty">Smart search: press OK to start</string>
-    <string name="plus_search_title_with_query">Search: %1$s</string>
+    <string name="plus_search_title_empty">Press OK to search your photos</string>
+    <string name="plus_search_title_with_query">Search: %1$s (press up for a new search)</string>
     <string name="plus_search_dialog_title">Search photos</string>
     <string name="plus_search_hint">e.g. mountains, sailboat, beach</string>
     <string name="plus_search_action">Search</string>

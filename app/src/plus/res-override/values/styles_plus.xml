@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Same as the upstream styles of the same name (build type resources override src/main), plus a frame -->
+<resources>
+    <style name="DefaultCardImageStyle" parent="Widget.Leanback.ImageCardView.ImageStyle">
+        <item name="android:layout_width">@dimen/default_image_card_width</item>
+        <item name="android:layout_height">@dimen/default_image_card_height</item>
+        <item name="android:foreground">@drawable/plus_thumb_frame</item>
+    </style>
+
+    <style name="GridCardImageStyle" parent="Widget.Leanback.ImageCardView.ImageStyle">
+        <item name="android:layout_width">@dimen/grid_card_width</item>
+        <item name="android:layout_height">@dimen/grid_card_height</item>
+        <item name="android:foreground">@drawable/plus_thumb_frame</item>
+    </style>
+</resources>

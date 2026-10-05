@@ -16,8 +16,10 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -30,15 +32,17 @@ import kotlinx.coroutines.launch
 import nl.giejay.android.tv.immich.R
 import nl.giejay.android.tv.immich.api.ApiClient
 import nl.giejay.android.tv.immich.api.model.Asset
+import nl.giejay.android.tv.immich.card.Card
 import nl.giejay.android.tv.immich.assets.GenericAssetFragment
 import nl.giejay.android.tv.immich.plus.api.PlusApi
+import nl.giejay.android.tv.immich.plus.toDateCard
 import nl.giejay.android.tv.immich.shared.viewmodel.KeyEventsViewModel
 
 /**
  * Smart search (CLIP) over the whole library, e.g. "mountains" or "sailboat".
  *
- * The query is entered in a dialog: OK while the page is empty, or right at the grid's right edge
- * (the spot where other pages open their settings).
+ * The query is entered in a dialog: OK while the page is empty, UP in the top row of the results,
+ * or right at the grid's right edge (the spot where other pages open their settings).
  */
 class SmartSearchFragment : GenericAssetFragment() {
     private var dialogOpen = false
@@ -47,33 +51,61 @@ class SmartSearchFragment : GenericAssetFragment() {
         result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()?.let { search(it) }
     }
 
+    private var emptyHint: TextView? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        updateTitle()
-        openDialogOnOkWhileEmpty()
+        openDialogOnUnhandledKeys()
     }
 
     /**
-     * On an empty search page there is nothing to focus, so OK on the remote (also the press that
-     * enters the page from the menu) opens the search dialog. The key state is replayed to new
-     * collectors, hence the age check: only a fresh press counts.
+     * Key presses only reach MainActivity when no view handled them: OK on an empty page, or UP
+     * in the top row of the results. Both open the search dialog, prefilled with the last query so
+     * it can be extended. The key state is replayed to new collectors, hence the age check: only a
+     * fresh press counts.
      */
-    private fun openDialogOnOkWhileEmpty() {
+    private fun openDialogOnUnhandledKeys() {
         val keyEvents = ViewModelProvider(requireActivity())[KeyEventsViewModel::class.java]
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 keyEvents.state.collect { event ->
-                    val isOk = event?.keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
-                        event?.keyCode == KeyEvent.KEYCODE_ENTER ||
-                        event?.keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
-                    val fresh = event != null && SystemClock.uptimeMillis() - event.eventTime < FRESH_KEY_MS
-                    if (isOk && fresh && lastQuery == null && assets.isEmpty()) {
+                    if (event == null || event.action != KeyEvent.ACTION_DOWN ||
+                        SystemClock.uptimeMillis() - event.eventTime >= FRESH_KEY_MS
+                    ) return@collect
+                    val isOk = event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                        event.keyCode == KeyEvent.KEYCODE_ENTER ||
+                        event.keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER
+                    if ((isOk && assets.isEmpty()) || event.keyCode == KeyEvent.KEYCODE_DPAD_UP) {
                         showSearchDialog()
                     }
                 }
             }
         }
     }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        // own hint instead of a page title: a title overlaps the menu entry name ("Suche")
+        val hint = TextView(requireContext()).apply {
+            text = getString(R.string.plus_search_title_empty)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+            setTextColor(0xCCFFFFFF.toInt())
+            gravity = Gravity.CENTER
+            visibility = if (lastQuery == null) View.VISIBLE else View.GONE
+        }
+        emptyHint = hint
+        (view as? FrameLayout)?.addView(
+            hint,
+            FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT, Gravity.CENTER)
+        )
+    }
+
+    override fun onDestroyView() {
+        emptyHint = null
+        super.onDestroyView()
+    }
+
+    override fun createCard(a: Asset): Card = a.toDateCard()
 
     override suspend fun loadItems(
         apiClient: ApiClient,
@@ -87,17 +119,8 @@ class SmartSearchFragment : GenericAssetFragment() {
     // results are ordered by relevance, the user's photo sorting would scramble them
     override fun sortItems(items: List<Asset>): List<Asset> = items
 
-    override fun setTitle(response: List<Asset>) {
-        updateTitle()
-    }
-
     override fun openPopUpMenu() {
         showSearchDialog()
-    }
-
-    private fun updateTitle() {
-        title = lastQuery?.let { getString(R.string.plus_search_title_with_query, it) }
-            ?: getString(R.string.plus_search_title_empty)
     }
 
     private fun search(query: String) {
@@ -108,7 +131,8 @@ class SmartSearchFragment : GenericAssetFragment() {
         clearState()
         allPagesLoaded = false
         progressBar?.visibility = View.VISIBLE
-        updateTitle()
+        emptyHint?.visibility = View.GONE
+        Toast.makeText(requireContext(), getString(R.string.plus_search_title_with_query, trimmed), Toast.LENGTH_LONG).show()
         fetchInitialItems()
     }
 

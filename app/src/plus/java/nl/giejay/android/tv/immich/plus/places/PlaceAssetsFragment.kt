@@ -5,7 +5,9 @@ import arrow.core.Either
 import nl.giejay.android.tv.immich.api.ApiClient
 import nl.giejay.android.tv.immich.api.model.Asset
 import nl.giejay.android.tv.immich.assets.GenericAssetFragment
+import nl.giejay.android.tv.immich.card.Card
 import nl.giejay.android.tv.immich.plus.api.PlusApi
+import nl.giejay.android.tv.immich.plus.toDateCard
 
 /** All assets taken in one city, opened from [PlacesFragment]. */
 class PlaceAssetsFragment : GenericAssetFragment() {
@@ -29,6 +31,8 @@ class PlaceAssetsFragment : GenericAssetFragment() {
     override fun setTitle(response: List<Asset>) {
         title = city
     }
+
+    override fun createCard(a: Asset): Card = a.toDateCard()
 
     companion object {
         const val ARG_CITY = "city"
