@@ -1,16 +1,23 @@
 package nl.giejay.android.tv.immich.plus.search
 
-import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.SystemClock
 import android.speech.RecognizerIntent
+import android.util.TypedValue
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
+import android.widget.Button
 import android.widget.EditText
-import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -108,43 +115,83 @@ class SmartSearchFragment : GenericAssetFragment() {
     private fun showSearchDialog() {
         if (dialogOpen || !isAdded) return
         val context = requireContext()
+        val density = resources.displayMetrics.density
+        fun dp(value: Int) = (value * density).toInt()
+
+        val dialog = Dialog(context, android.R.style.Theme_DeviceDefault_Dialog_NoActionBar)
         val input = EditText(context).apply {
             setSingleLine()
             imeOptions = EditorInfo.IME_ACTION_SEARCH
             hint = getString(R.string.plus_search_hint)
             setText(lastQuery.orEmpty())
-            selectAll()
+            setSelection(text.length)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+            setTextColor(Color.WHITE)
+            setHintTextColor(0x99FFFFFF.toInt())
         }
-        val padding = (24 * resources.displayMetrics.density).toInt()
-        val container = FrameLayout(context).apply {
-            setPadding(padding, padding / 2, padding, 0)
-            addView(input)
+        fun submit() {
+            dialog.dismiss()
+            search(input.text.toString())
+        }
+        fun button(label: String, onClick: () -> Unit) = Button(context).apply {
+            text = label
+            isAllCaps = false
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            setOnClickListener { onClick() }
         }
 
         val voiceIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             .putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.plus_search_voice_prompt))
-
-        val builder = AlertDialog.Builder(context, android.R.style.Theme_DeviceDefault_Dialog_Alert)
-            .setTitle(R.string.plus_search_dialog_title)
-            .setView(container)
-            .setPositiveButton(R.string.plus_search_action) { _, _ -> search(input.text.toString()) }
-            .setNegativeButton(android.R.string.cancel, null)
-            .setOnDismissListener { dialogOpen = false }
-        if (voiceIntent.resolveActivity(context.packageManager) != null) {
-            builder.setNeutralButton(R.string.plus_search_voice) { _, _ -> voiceInput.launch(voiceIntent) }
+        val buttons = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.END
+            if (voiceIntent.resolveActivity(context.packageManager) != null) {
+                addView(button(getString(R.string.plus_search_voice)) {
+                    dialog.dismiss()
+                    voiceInput.launch(voiceIntent)
+                })
+            }
+            addView(button(getString(android.R.string.cancel)) { dialog.dismiss() })
+            addView(button(getString(R.string.plus_search_action)) { submit() })
         }
-        val dialog = builder.create()
+        val content = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(24), dp(20), dp(24), dp(16))
+            background = GradientDrawable().apply {
+                setColor(0xF2202124.toInt())
+                cornerRadius = dp(12).toFloat()
+            }
+            addView(TextView(context).apply {
+                text = getString(R.string.plus_search_dialog_title)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+                setTextColor(Color.WHITE)
+            })
+            addView(input, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                topMargin = dp(12)
+                bottomMargin = dp(8)
+            })
+            addView(buttons)
+        }
+
         input.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
-                search(input.text.toString())
-                dialog.dismiss()
+                submit()
                 true
             } else {
                 false
             }
         }
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        dialog.setContentView(content)
+        dialog.setOnDismissListener { dialogOpen = false }
+        dialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            // compact box in the upper half, the on-screen keyboard needs the lower part
+            setLayout(minOf(dp(560), (resources.displayMetrics.widthPixels * 0.7f).toInt()), WindowManager.LayoutParams.WRAP_CONTENT)
+            setGravity(Gravity.TOP or Gravity.CENTER_HORIZONTAL)
+            attributes = attributes.apply { y = dp(48) }
+            setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE or WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        }
         dialogOpen = true
         dialog.show()
         input.requestFocus()
