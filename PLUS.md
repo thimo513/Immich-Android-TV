@@ -23,6 +23,7 @@ Eingriffe in Originaldateien (bewusst minimal, damit Merges konfliktfrei bleiben
 1. `app/build.gradle`: `apply from: 'plus.gradle'`
 2. `HomeFragment.kt`: eine Zeile `*PlusMenu.headers()` in `HEADERS`
 3. `nav_graph.xml`: Destination `plusPlaceAssetsFragment`
+5. `ImmichMediaSlider.kt`: fünf Zeilen, hängen das `ZoomPlugin` (Zoom-Auswahl 1x/2x/3x/5x/8x für Fotos) an die Diashow
 4. `VerticalCardGridFragment.kt`: `VerticalGridPresenter(ZOOM_FACTOR, false)`, schaltet das Abdunkeln nicht fokussierter Vorschaubilder aus (Leanback dimmt sie standardmäßig)
 
 ## Branches und Automatik

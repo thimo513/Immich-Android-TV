@@ -12,6 +12,11 @@
     <string name="plus_search_voice">Voice input</string>
     <string name="plus_search_voice_prompt">What are you looking for?</string>
 
+    <string name="plus_zoom">Zoom</string>
+    <string name="plus_zoom_title">Zoom</string>
+    <string name="plus_zoom_off">Original (1x)</string>
+    <string name="plus_zoom_hint">%1$dx: arrow keys move the picture, Back zooms out</string>
+
     <string name="plus_update_title">Update available</string>
     <string name="plus_update_message">Immich TV Plus %1$s is available.</string>
     <string name="plus_update_install">Install now</string>

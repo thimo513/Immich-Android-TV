@@ -59,6 +59,11 @@ class ImmichMediaSlider : MediaSliderFragment() {
         config.controllerPlugins += enabledPlugins.controllerPlugins
         config.viewPlugins += enabledPlugins.viewPlugins
         config.keyEventPlugins += enabledPlugins.keyEventPlugins
+        // Immich TV Plus: zoom levels for photos (first in the key list, so it sees the arrow keys while zoomed)
+        nl.giejay.android.tv.immich.plus.zoom.ZoomPlugin().let { zoom ->
+            config.controllerPlugins += zoom
+            config.keyEventPlugins = listOf(zoom) + config.keyEventPlugins
+        }
 
         loadMediaSliderView(config)
 
