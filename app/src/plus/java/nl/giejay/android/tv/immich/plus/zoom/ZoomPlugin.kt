@@ -11,6 +11,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -25,11 +26,14 @@ import nl.giejay.mediaslider.plugin.SliderControllerPlugin
 import nl.giejay.mediaslider.plugin.SliderKeyEventPlugin
 import nl.giejay.mediaslider.plugin.SliderKeyEventResult
 import nl.giejay.mediaslider.plugin.SliderKeyEventState
+import nl.giejay.mediaslider.view.MediaSliderController
 import nl.giejay.mediaslider.view.TouchImageView
 
 /**
  * Zoom for photos in the viewer: a magnifier button in the controller bar opens a choice of zoom
- * levels. While zoomed the arrow keys move the picture, Back zooms out again.
+ * levels. While zoomed the arrow keys move the visible part (hold to glide), a mini map in the
+ * corner shows where it is, Back zooms out again. Made for plain D-pad remotes (e.g. Nokia
+ * Streaming Box 8000): arrows, OK and Back are all it needs.
  */
 class ZoomPlugin : SliderControllerPlugin, SliderKeyEventPlugin {
     private var pager: ViewPager? = null
@@ -112,6 +116,8 @@ class ZoomPlugin : SliderControllerPlugin, SliderKeyEventPlugin {
         image.maxZoom = MAX_ZOOM
         if (level <= 1f) image.resetZoom() else image.setZoom(level)
         context.controller.hideOverlayControls()
+        // the matrix is applied on the next layout pass, read the visible part after it
+        image.post { updateMiniMap(image) }
         if (level > 1f) {
             Toast.makeText(context.context, context.context.getString(R.string.plus_zoom_hint, level.toInt()), Toast.LENGTH_LONG).show()
         }
@@ -125,17 +131,28 @@ class ZoomPlugin : SliderControllerPlugin, SliderKeyEventPlugin {
         if (state.currentItemType != SliderItemType.IMAGE || state.isControllerVisible) {
             return SliderKeyEventResult.UNHANDLED
         }
-        val image = currentImageView()?.takeIf { it.isZoomed } ?: return SliderKeyEventResult.UNHANDLED
+        val image = currentImageView()?.takeIf { it.isZoomed }
+        if (image == null) {
+            // swiped to another photo or zoomed out with a gesture
+            hideMiniMap()
+            return SliderKeyEventResult.UNHANDLED
+        }
         val isDown = event.action == KeyEvent.ACTION_DOWN
         return when (event.keyCode) {
             KeyEvent.KEYCODE_BACK -> {
-                if (isDown) image.resetZoom()
+                if (isDown) {
+                    image.resetZoom()
+                    hideMiniMap()
+                }
                 SliderKeyEventResult.HANDLED_CONSUME
             }
 
             KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT,
             KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN -> {
-                if (isDown) pan(image, event.keyCode)
+                if (isDown) {
+                    pan(image, event.keyCode, held = event.repeatCount > 0)
+                    updateMiniMap(image)
+                }
                 SliderKeyEventResult.HANDLED_CONSUME
             }
 
@@ -143,10 +160,11 @@ class ZoomPlugin : SliderControllerPlugin, SliderKeyEventPlugin {
         }
     }
 
-    private fun pan(image: TouchImageView, keyCode: Int) {
+    private fun pan(image: TouchImageView, keyCode: Int, held: Boolean) {
         val center = image.scrollPosition ?: return
-        // the visible part is 1/zoom of the picture, move by a third of it per key press
-        val step = 0.33f / image.currentZoom
+        // the visible part is 1/zoom of the picture: a single press moves by a quarter of it,
+        // holding the key (auto repeat of the remote) glides in smaller steps
+        val step = (if (held) 0.08f else 0.25f) / image.currentZoom
         var x = center.x
         var y = center.y
         when (keyCode) {
@@ -156,6 +174,37 @@ class ZoomPlugin : SliderControllerPlugin, SliderKeyEventPlugin {
             KeyEvent.KEYCODE_DPAD_DOWN -> y += step
         }
         image.setScrollPosition(x.coerceIn(0f, 1f), y.coerceIn(0f, 1f))
+    }
+
+    private var miniMap: ZoomMiniMapView? = null
+
+    /** Small overview in the lower right corner: the whole photo and the part that is visible. */
+    private fun updateMiniMap(image: TouchImageView) {
+        if (!image.isZoomed) {
+            hideMiniMap()
+            return
+        }
+        val drawable = image.drawable ?: return
+        val decor = image.rootView as? FrameLayout ?: return
+        val map = miniMap ?: ZoomMiniMapView(image.context).also { view ->
+            val density = image.resources.displayMetrics.density
+            decor.addView(view, FrameLayout.LayoutParams((160 * density).toInt(), (160 * density).toInt(), Gravity.BOTTOM or Gravity.END).apply {
+                rightMargin = (32 * density).toInt()
+                bottomMargin = (32 * density).toInt()
+            })
+            miniMap = view
+        }
+        map.update(drawable.intrinsicWidth.toFloat() / drawable.intrinsicHeight, image.zoomedRect)
+        map.visibility = View.VISIBLE
+    }
+
+    private fun hideMiniMap() {
+        miniMap?.let { (it.parent as? ViewGroup)?.removeView(it) }
+        miniMap = null
+    }
+
+    override fun onDestroy(controller: MediaSliderController) {
+        hideMiniMap()
     }
 
     companion object {
