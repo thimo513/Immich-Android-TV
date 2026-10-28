@@ -68,6 +68,18 @@ jobs:
             exit 0
           fi
           if git merge --no-edit upstream/main; then
+            # GitHub refuses pushes that change workflow files without the "workflows" permission.
+            # Upstream's own workflows (release/CI) are disabled in this fork anyway, so they keep
+            # the state they had before the merge. Only our plus-sync.yml is ever changed here.
+            git diff --name-status HEAD^1 HEAD -- .github/workflows | while read -r status path; do
+              case "$status" in
+                A) git rm -q -f -- "$path" ;;
+                *) git checkout HEAD^1 -- "$path" ;;
+              esac
+            done
+            if ! git diff --cached --quiet; then
+              git commit -q --amend --no-edit
+            fi
             if git push origin HEAD:plus; then
               exit 0
             fi
